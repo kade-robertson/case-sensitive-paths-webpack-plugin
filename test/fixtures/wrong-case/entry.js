@@ -1,1 +1,1 @@
-var testModule = require('./TestFile');
+var testModule = require('./ExistingTestFile');
