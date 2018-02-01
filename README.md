@@ -3,8 +3,9 @@ Case Sensitive Paths - Webpack Plugin
 
 [![Build Status](https://travis-ci.org/Urthen/case-sensitive-paths-webpack-plugin.svg?branch=master)](https://travis-ci.org/Urthen/case-sensitive-paths-webpack-plugin)
 [![Known Vulnerabilities](https://snyk.io/test/github/urthen/case-sensitive-paths-webpack-plugin/badge.svg?targetFile=package.json)](https://snyk.io/test/github/urthen/case-sensitive-paths-webpack-plugin?targetFile=package.json)
-[![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/case-sensitive-paths-webpack-plugin)
-![Bananas: Ripe](https://img.shields.io/badge/Bananas-Ripe-yellow.svg)
+[![npm version](https://badge.fury.io/js/case-sensitive-paths-webpack-plugin.svg)](https://badge.fury.io/js/case-sensitive-paths-webpack-plugin)
+[![npm downloads](https://img.shields.io/npm/dw/case-sensitive-paths-webpack-plugin.svg)](https://www.npmjs.com/package/case-sensitive-paths-webpack-plugin)
+![bananas: ripe](https://img.shields.io/badge/bananas-ripe-yellow.svg)
 
 This Webpack plugin enforces the entire path of all required modules match the exact case of the actual path on disk.
 Using this plugin helps alleviate cases where developers working on OSX, which does not follow strict path case sensitivity,
