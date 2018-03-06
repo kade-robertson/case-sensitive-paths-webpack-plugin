@@ -1,4 +1,5 @@
 language: node_js
+
 node_js:
   - "node"
   - "8"
@@ -8,6 +9,22 @@ node_js:
 os:
   - linux
   - osx
+
+env:
+  - WEBPACK_VERSION=1
+  - WEBPACK_VERSION=2
+  - WEBPACK_VERSION=3
+  - WEBPACK_VERSION=4
+
+matrix:
+  exclude:
+  - node_js: "4"
+    env: WEBPACK_VERSION=4
+
+install:
+  - npm install
+  - npm rm webpack
+  - npm install webpack@$WEBPACK_VERSION || true
 
 branches:
   only:
