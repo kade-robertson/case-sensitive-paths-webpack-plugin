@@ -1,8 +1,18 @@
 extends: airbnb-base
 plugins:
   - import
+
+parserOptions:
+  ecmaVersion: 5
+
+env:
+  node: true
+  browser: false
+  es6: false
+
 rules:
     no-console: off
     func-names: off
     max-len: off
     no-confusing-arrow: off
+    object-shorthand: off

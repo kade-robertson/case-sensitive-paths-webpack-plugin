@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - "node"
+  - "10"
   - "8"
   - "6"
   - "4"
@@ -15,11 +15,6 @@ env:
   - WEBPACK_VERSION=2
   - WEBPACK_VERSION=3
   - WEBPACK_VERSION=4
-
-matrix:
-  exclude:
-  - node_js: "4"
-    env: WEBPACK_VERSION=4
 
 install:
   - npm install

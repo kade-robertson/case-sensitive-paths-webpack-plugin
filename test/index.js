@@ -13,7 +13,7 @@ const webpackPkg = require('webpack/package.json');
 
 const CaseSensitivePathsPlugin = require('../');
 
-function webpackCompilerAtDir(dir, otherOpts) {
+function webpackCompilerAtDir(dir, otherOpts, useBeforeEmitHook) {
   const opts = Object.assign({
     context: path.join(__dirname, 'fixtures', dir),
     entry: './entry',
@@ -22,7 +22,9 @@ function webpackCompilerAtDir(dir, otherOpts) {
       filename: 'result.js',
     },
     plugins: [
-      new CaseSensitivePathsPlugin(),
+      new CaseSensitivePathsPlugin({
+        useBeforeEmitHook: useBeforeEmitHook,
+      }),
     ],
   }, otherOpts);
 
@@ -39,6 +41,26 @@ describe('CaseSensitivePathsPlugin', () => {
   if (isPlatformCaseInsensitive) {
     it('should compile and warn on wrong filename case', (done) => {
       const compiler = webpackCompilerAtDir('wrong-case');
+
+      compiler.run((err, stats) => {
+        if (err) done(err);
+        assert(stats.hasErrors());
+        assert.equal(stats.hasWarnings(), false);
+        const jsonStats = stats.toJson();
+        assert.equal(jsonStats.errors.length, 1);
+
+        const error = jsonStats.errors[0];
+        // check that the plugin produces the correct output
+        assert(error.indexOf('[CaseSensitivePathsPlugin]') > -1);
+        assert(error.indexOf('ExistingTestFile.js') > -1); // wrong file require
+        assert(error.indexOf('existingTestFile.js') > -1); // actual file name
+
+        done();
+      });
+    });
+
+    it('should handle errors correctly in emit hook mode', (done) => {
+      const compiler = webpackCompilerAtDir('wrong-case', {}, true);
 
       compiler.run((err, stats) => {
         if (err) done(err);

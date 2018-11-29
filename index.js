@@ -186,7 +186,7 @@ CaseSensitivePathsPlugin.prototype.apply = function (compiler) {
               if (resolvedFilesCount === compilation.fileDependencies.size) {
                 if (errors.length) {
                   // Send all errors to webpack
-                  compilation.errors.push(...errors);
+                  Array.prototype.push.apply(compilation.errors, errors);
                 }
                 callback();
               }
