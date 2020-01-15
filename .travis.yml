@@ -1,19 +1,17 @@
 language: node_js
 
 node_js:
+  - "12"
   - "10"
   - "8"
-  - "6"
 
 os:
   - linux
   - osx
 
 env:
-  - WEBPACK_VERSION=1
-  - WEBPACK_VERSION=2
-  - WEBPACK_VERSION=3
   - WEBPACK_VERSION=4
+  - WEBPACK_VERSION=5.0.0-beta.11
 
 install:
   - npm install
