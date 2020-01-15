@@ -17,6 +17,7 @@ function webpackCompilerAtDir(dir, otherOpts, useBeforeEmitHook) {
   const opts = Object.assign({
     context: path.join(__dirname, 'fixtures', dir),
     entry: './entry',
+    mode: 'development',
     output: {
       path: path.join(__dirname, 'js'),
       filename: 'result.js',
@@ -42,14 +43,18 @@ describe('CaseSensitivePathsPlugin', () => {
     it('should compile and warn on wrong filename case', (done) => {
       const compiler = webpackCompilerAtDir('wrong-case');
 
-      compiler.run((err, stats) => {
+      return compiler.run((err, stats) => {
         if (err) done(err);
         assert(stats.hasErrors());
         assert.equal(stats.hasWarnings(), false);
         const jsonStats = stats.toJson();
         assert.equal(jsonStats.errors.length, 1);
 
-        const error = jsonStats.errors[0];
+        let error = jsonStats.errors[0];
+
+        // account for webpack 5 changes
+        if (error.message) error = error.message;
+
         // check that the plugin produces the correct output
         assert(error.indexOf('[CaseSensitivePathsPlugin]') > -1);
         assert(error.indexOf('ExistingTestFile.js') > -1); // wrong file require
@@ -69,7 +74,10 @@ describe('CaseSensitivePathsPlugin', () => {
         const jsonStats = stats.toJson();
         assert.equal(jsonStats.errors.length, 1);
 
-        const error = jsonStats.errors[0];
+        let error = jsonStats.errors[0];
+
+        // account for webpack 5 changes
+        if (error.message) error = error.message;
         // check that the plugin produces the correct output
         assert(error.indexOf('[CaseSensitivePathsPlugin]') > -1);
         assert(error.indexOf('ExistingTestFile.js') > -1); // wrong file require
@@ -142,7 +150,10 @@ describe('CaseSensitivePathsPlugin', () => {
       compilationCount += 1;
 
       if (compilationCount === 1) {
-        const error = stats.toJson().errors[0];
+        let error = stats.toJson().errors[0];
+
+        // account for webpack 5 changes
+        if (error.message) error = error.message;
 
         assert(stats.hasErrors());
         assert(error.indexOf('Cannot resolve') !== -1 || error.indexOf('Can\'t resolve') !== -1);
