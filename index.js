@@ -64,7 +64,7 @@ CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function (dir, callback) 
       return;
     }
 
-    callback(files.map(f => f.normalize ? f.normalize('NFC') : f));
+    callback(files.map((f) => f.normalize ? f.normalize('NFC') : f));
   });
 };
 
@@ -152,8 +152,10 @@ CaseSensitivePathsPlugin.prototype.apply = function (compiler) {
         } else {
           done(new Error(`[CaseSensitivePathsPlugin] \`${pathName}\` does not match the corresponding path on disk ${realName}`));
         }
+      } else if (data.createData) {
+        done(null);
       } else {
-        if (data.createData) done(null); else done(null, data);
+        done(null, data);
       }
     });
   };
