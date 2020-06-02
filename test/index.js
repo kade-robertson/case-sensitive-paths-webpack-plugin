@@ -67,6 +67,30 @@ describe('CaseSensitivePathsPlugin', () => {
       });
     });
 
+    it('should compile and warn on wrong folder case', (done) => {
+      const compiler = webpackCompilerAtDir('wrong-folder-case');
+
+      return compiler.run((err, stats) => {
+        if (err) done(err);
+        assert(stats.hasErrors());
+        assert.equal(stats.hasWarnings(), false);
+        const jsonStats = stats.toJson();
+        assert.equal(jsonStats.errors.length, 1);
+
+        let error = jsonStats.errors[0];
+
+        // account for webpack 5 changes
+        if (error.message) error = error.message;
+
+        // check that the plugin produces the correct output
+        assert(error.indexOf('[CaseSensitivePathsPlugin]') > -1);
+        assert(error.indexOf('Nested') > -1); // wrong file require
+        assert(error.indexOf('nested') > -1); // actual file name
+
+        done();
+      });
+    });
+
     it('should handle errors correctly in emit hook mode', (done) => {
       const compiler = webpackCompilerAtDir('wrong-case', {}, true);
 
