@@ -36,13 +36,13 @@ function CaseSensitivePathsPlugin(options) {
   this.reset();
 }
 
-CaseSensitivePathsPlugin.prototype.reset = function () {
+CaseSensitivePathsPlugin.prototype.reset = function() {
   this.pathCache = {};
   this.fsOperations = 0;
   this.primed = false;
 };
 
-CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function (dir, callback) {
+CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function(dir, callback) {
   const that = this;
   const fs = this.compiler.inputFileSystem;
   this.fsOperations += 1;
@@ -58,20 +58,27 @@ CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function (dir, callback) 
   fs.readdir(dir, (err, files) => {
     if (err) {
       if (that.options.debug) {
-        this.logger.log('[CaseSensitivePathsPlugin] Failed to read directory', dir, err);
+        this.logger.log(
+          '[CaseSensitivePathsPlugin] Failed to read directory',
+          dir,
+          err,
+        );
       }
       callback([]);
       return;
     }
 
-    callback(files.map((f) => f.normalize ? f.normalize('NFC') : f));
+    callback(files.map((f) => (f.normalize ? f.normalize('NFC') : f)));
   });
 };
 
 // This function based on code found at http://stackoverflow.com/questions/27367261/check-if-file-exists-case-sensitive
 // By Patrick McElhaney (No license indicated - Stack Overflow Answer)
 // This version will return with the real name of any incorrectly-cased portion of the path, null otherwise.
-CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function (filepath, callback) {
+CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function(
+  filepath,
+  callback,
+) {
   // Split filepath into current filename (or directory name) and parent directory tree.
   const that = this;
   const dir = path.dirname(filepath);
@@ -79,7 +86,11 @@ CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function (filepath, call
   const parsedPath = path.parse(dir);
 
   // If we are at the root, or have found a path we already know is good, return.
-  if (parsedPath.dir === parsedPath.root || dir === '.' || Object.prototype.hasOwnProperty.call(that.pathCache, filepath)) {
+  if (
+    parsedPath.dir === parsedPath.root ||
+    dir === '.' ||
+    Object.prototype.hasOwnProperty.call(that.pathCache, filepath)
+  ) {
     callback();
     return;
   }
@@ -115,7 +126,7 @@ CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function (filepath, call
   });
 };
 
-CaseSensitivePathsPlugin.prototype.primeCache = function (callback) {
+CaseSensitivePathsPlugin.prototype.primeCache = function(callback) {
   if (this.primed) {
     callback();
     return;
@@ -132,12 +143,15 @@ CaseSensitivePathsPlugin.prototype.primeCache = function (callback) {
   });
 };
 
-CaseSensitivePathsPlugin.prototype.apply = function (compiler) {
+CaseSensitivePathsPlugin.prototype.apply = function(compiler) {
   this.compiler = compiler;
 
   const onDone = () => {
     if (this.options.debug) {
-      this.logger.log('[CaseSensitivePathsPlugin] Total filesystem reads:', this.fsOperations);
+      this.logger.log(
+        '[CaseSensitivePathsPlugin] Total filesystem reads:',
+        this.fsOperations,
+      );
     }
 
     this.reset();
@@ -148,9 +162,14 @@ CaseSensitivePathsPlugin.prototype.apply = function (compiler) {
       if (realName) {
         if (realName === '!nonexistent') {
           // If file does not exist, let Webpack show a more appropriate error.
-          if (data.createData) done(null); else done(null, data);
+          if (data.createData) done(null);
+          else done(null, data);
         } else {
-          done(new Error(`[CaseSensitivePathsPlugin] \`${pathName}\` does not match the corresponding path on disk ${realName}`));
+          done(
+            new Error(
+              `[CaseSensitivePathsPlugin] \`${pathName}\` does not match the corresponding path on disk ${realName}`,
+            ),
+          );
         }
       } else if (data.createData) {
         done(null);
@@ -174,33 +193,44 @@ CaseSensitivePathsPlugin.prototype.apply = function (compiler) {
     compiler.hooks.done.tap('CaseSensitivePathsPlugin', onDone);
     if (this.options.useBeforeEmitHook) {
       if (this.options.debug) {
-        this.logger.log('[CaseSensitivePathsPlugin] Using the hook for before emit.');
+        this.logger.log(
+          '[CaseSensitivePathsPlugin] Using the hook for before emit.',
+        );
       }
-      compiler.hooks.emit.tapAsync('CaseSensitivePathsPlugin', (compilation, callback) => {
-        let resolvedFilesCount = 0;
-        const errors = [];
-        this.primeCache(() => {
-          compilation.fileDependencies.forEach((filename) => {
-            checkFile(filename, filename, (error) => {
-              resolvedFilesCount += 1;
-              if (error) {
-                errors.push(error);
-              }
-              if (resolvedFilesCount === compilation.fileDependencies.size) {
-                if (errors.length) {
-                  // Send all errors to webpack
-                  Array.prototype.push.apply(compilation.errors, errors);
+      compiler.hooks.emit.tapAsync(
+        'CaseSensitivePathsPlugin',
+        (compilation, callback) => {
+          let resolvedFilesCount = 0;
+          const errors = [];
+          this.primeCache(() => {
+            compilation.fileDependencies.forEach((filename) => {
+              checkFile(filename, filename, (error) => {
+                resolvedFilesCount += 1;
+                if (error) {
+                  errors.push(error);
                 }
-                callback();
-              }
+                if (resolvedFilesCount === compilation.fileDependencies.size) {
+                  if (errors.length) {
+                    // Send all errors to webpack
+                    Array.prototype.push.apply(compilation.errors, errors);
+                  }
+                  callback();
+                }
+              });
             });
           });
-        });
-      });
+        },
+      );
     } else {
-      compiler.hooks.normalModuleFactory.tap('CaseSensitivePathsPlugin', (nmf) => {
-        nmf.hooks.afterResolve.tapAsync('CaseSensitivePathsPlugin', onAfterResolve);
-      });
+      compiler.hooks.normalModuleFactory.tap(
+        'CaseSensitivePathsPlugin',
+        (nmf) => {
+          nmf.hooks.afterResolve.tapAsync(
+            'CaseSensitivePathsPlugin',
+            onAfterResolve,
+          );
+        },
+      );
     }
   } else {
     compiler.plugin('done', onDone);
