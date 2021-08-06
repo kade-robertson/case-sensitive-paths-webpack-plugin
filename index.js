@@ -18,10 +18,21 @@
 
  The originals did not properly case-sensitize the entire path, however. This plugin resolves that issue.
 
- This plugin license, also MIT:
+ Modified plugin license, also MIT:
  --------
  The MIT License (MIT)
  Copyright (c) 2016 Michael Pratt
+ Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ --------
+
+ Further modified to speed up greatly by ignoring node_modules.
+
+ Current license, also MIT:
+--------
+ The MIT License (MIT)
+ Copyright (c) 2021 Kade Robertson
  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -37,16 +48,21 @@ function CaseSensitivePathsPlugin(options) {
   this.reset();
 }
 
-CaseSensitivePathsPlugin.prototype.reset = function() {
+CaseSensitivePathsPlugin.prototype.reset = function () {
   this.pathCache = new Map();
   this.fsOperations = 0;
   this.primed = false;
 };
 
-CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function(dir, callback) {
+CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function (dir, callback) {
   const that = this;
   const fs = this.compiler.inputFileSystem;
   this.fsOperations += 1;
+
+  if (/node_modules/.test(dir)) {
+    callback([]);
+    return;
+  }
 
   if (this.pathCache.has(dir)) {
     callback(this.pathCache.get(dir));
@@ -76,7 +92,7 @@ CaseSensitivePathsPlugin.prototype.getFilenamesInDir = function(dir, callback) {
 // This function based on code found at http://stackoverflow.com/questions/27367261/check-if-file-exists-case-sensitive
 // By Patrick McElhaney (No license indicated - Stack Overflow Answer)
 // This version will return with the real name of any incorrectly-cased portion of the path, null otherwise.
-CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function(
+CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function (
   filepath,
   callback,
 ) {
@@ -88,9 +104,9 @@ CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function(
 
   // If we are at the root, or have found a path we already know is good, return.
   if (
-    parsedPath.dir === parsedPath.root ||
-    dir === '.' ||
-    that.pathCache.has(filepath)
+    parsedPath.dir === parsedPath.root
+    || dir === '.'
+    || that.pathCache.has(filepath)
   ) {
     callback();
     return;
@@ -127,7 +143,7 @@ CaseSensitivePathsPlugin.prototype.fileExistsWithCase = function(
   });
 };
 
-CaseSensitivePathsPlugin.prototype.primeCache = function(callback) {
+CaseSensitivePathsPlugin.prototype.primeCache = function (callback) {
   if (this.primed) {
     callback();
     return;
@@ -138,13 +154,13 @@ CaseSensitivePathsPlugin.prototype.primeCache = function(callback) {
   // as in certain circumstances people can switch into an incorrectly-cased directory.
   const currentPath = path.resolve();
   that.getFilenamesInDir(currentPath, (files) => {
-    that.pathCache.set(currentPath,files);
+    that.pathCache.set(currentPath, files);
     that.primed = true;
     callback();
   });
 };
 
-CaseSensitivePathsPlugin.prototype.apply = function(compiler) {
+CaseSensitivePathsPlugin.prototype.apply = function (compiler) {
   this.compiler = compiler;
 
   const onDone = () => {
@@ -180,16 +196,12 @@ CaseSensitivePathsPlugin.prototype.apply = function(compiler) {
     });
   };
 
-  const cleanupPath = (resourcePath) => {
-      // Trim ? off, since some loaders add that to the resource they're attemping to load
-      return resourcePath.split('?')[0]
-        // replace escaped \0# with # see: https://github.com/webpack/enhanced-resolve#escaping
-        .replace('\u0000#', '#');
-  }
+  // Trim ? off, since some loaders add that to the resource they're attemping to load, and
+  // replace escaped \0# with # see: https://github.com/webpack/enhanced-resolve#escaping
+  const cleanupPath = (resourcePath) => resourcePath.split('?')[0].replace('\u0000#', '#');
 
   const onAfterResolve = (data, done) => {
     this.primeCache(() => {
-      
       let pathName = cleanupPath((data.createData || data).resource);
       pathName = pathName.normalize ? pathName.normalize('NFC') : pathName;
 
